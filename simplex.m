@@ -8,8 +8,7 @@ lineno  = 1;
 title   = 'Ingreso de Datos';
 def     = {'[ ]','0','0'};
 options.Resize = 'on';
-a       = inputdlg(prompt,title,lineno,def,options);
-a       = char(a);
+a       = char(inputdlg(prompt,title,lineno,def,options));
 [m,n]   = size(a);
 cout    = eval(a(1,:)); %Se transforman los valores (cadena de caracteres) ingresados en la FO a un vector de enteros
 type    = eval(a(2,1)); %Se transforman los valores (cadena de caracteres) ingresados en el tipo de FO a un entero
@@ -21,49 +20,45 @@ str2    = struct('var_base',{},'valeur',{});
 
 % Ventana para definir restricciones
 for i=1:nbr %Se definen los tipos de restricciones en orden
-prompt  = {strcat('Ingrese el tipo de restricción para la condición ',num2str(i),' (<=,>=,=):')};
-title   = 'Ingreso de Datos';
-def     = {''};
-options.Resize = 'on';
-p = inputdlg(prompt,title,lineno,def,options);
-p = char(p);
-opert = p;
-str1(1,i).Type = opert;
+prompt          = {strcat('Ingrese el tipo de restricción para la condición ',num2str(i),' (<=,>=,=):')};
+title           = 'Ingreso de Datos';
+def             = {''};
+options.Resize  = 'on';
+p               = char(inputdlg(prompt,title,lineno,def,options));
+str1(1,i).Type  = p;
 end
 %=====================================================
 
 
 % Ventana para definir coeficinetes de las restricciones
-prompt  = {'Ingrese la matriz de restricciones'};
-lineno  = 1;
-title   = 'Ingreso de Datos';
-def     = {'[]'};
-options.Resize='on';
-t       = inputdlg(prompt,title,lineno,def,options);
-t       = char(t);
-sc      = eval(t); %Se transforman los valores (cadena de caracteres) ingresados en el campo, a un matriz de enteros
+prompt          = {'Ingrese la matriz de restricciones'};
+lineno          = 1;
+title           = 'Ingreso de Datos';
+def             = {'[]'};
+options.Resize  ='on';
+t               = char(inputdlg(prompt,title,lineno,def,options));
+sc              = eval(t); %Se transforman los valores (cadena de caracteres) ingresados en el campo, a un matriz de enteros
 %=====================================================
 
 
 % Ventana para definir coeficinetes de 'b'
-prompt  = {'Ingrese el vector de valores independientes b'};
-lineno  = 1;
-title   = 'Ingreso de Datos';
-def     = {'[]'};
-options.Resize = 'on';
-u       = inputdlg(prompt,title,lineno,def,options);
-u       = char(u);
-second  = eval(u);
+prompt          = {'Ingrese el vector de valores independientes b'};
+lineno          = 1;
+title           = 'Ingreso de Datos';
+def             = {'[]'};
+options.Resize  = 'on';
+u               = char(inputdlg(prompt,title,lineno,def,options));
+second          = eval(u);
 %=====================================================
 
-M       = 1000*max(max(sc)); %METODO DE LA GRAN M
-sc1     = []; %Matriz de Variables de holgura
-sc2     = []; %Matriz de Variables artificiales
-v_a     = zeros(1,length(cout));
-v_e     = [];
-v_b     = [];
-v_ari   = [];
-j       = 1;
+M               = 1000*max(max(sc)); %METODO DE LA GRAN M
+sc1             = []; %Matriz de Variables de holgura
+sc2             = []; %Matriz de Variables artificiales
+v_a             = zeros(1,length(cout));
+v_e             = [];
+v_b             = [];
+v_ari           = [];
+j               = 1;
 
 
 %Paso a forma estandar
@@ -129,27 +124,29 @@ if length(v_ari~=0)
 else  v_ar=[];
 end
 
-Cj=[cout,0.*v_e,v_ar];
-Vb=[];
-Q=v_b;
-Ci=[];
-tabl=[];
+Cj      = [cout,0.*v_e,v_ar];
+Vb      = [];
+Q       = v_b;
+Ci      = [];
+tabl    = [];
 
 for i=1:length(Q)
-    tabl=[tabl; ' | '];
-    str2(1,i).valeur=Q(i);
-    ind=find(x==Q(i));
-    str2(1,i).var_base=str1(1,ind).vari;
-    Vb=[Vb,str2(1,i).var_base,' '];
-    Ci=[Ci,Cj(ind)];
+    tabl                = [tabl; ' | '];
+    str2(1,i).valeur    = Q(i);
+    ind                 = find(x==Q(i));
+    str2(1,i).var_base  = str1(1,ind).vari;
+    Vb                  = [Vb,str2(1,i).var_base,' '];
+    Ci                  = [Ci,Cj(ind)];
 end
 
-Z=sum(Ci.*Q);
+Z  = sum(Ci.*Q);
+
 for i=1:length(Cj)
-    Zj(i)=sum(Ci'.*sc(:,i));
+    Zj(i)               =   sum(Ci'.*sc(:,i));
 end
-Cj_Zj=Cj-Zj;
-l=[];
+
+Cj_Zj   = Cj-Zj;
+l       = [];
 for i=1:nbr
     if length(str2(1,i).var_base)==2
         l=[l;str2(1,i).var_base,' '];
