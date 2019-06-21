@@ -1,130 +1,134 @@
-function simplex()
-clc;
-clear all;
 
-% Ventana para definir la función objetivo
+%% Agradecimientos a Stephen Cobeldick por sus sugerencias %%
+%%
+
+clc;
+% Ventana para definir la función objetivo ===========================================
 prompt  = {'Función objetivo = ', 'max == 1 or min==2','Numero de restricciones = '};
 lineno  = 1;
 title   = 'Ingreso de Datos';
 def     = {'[ ]','0','0'};
 options.Resize = 'on';
-a       = char(inputdlg(prompt,title,lineno,def,options));
-[m,n]   = size(a);
-cout    = eval(a(1,:)); %Se transforman los valores (cadena de caracteres) ingresados en la FO a un vector de enteros
-type    = eval(a(2,1)); %Se transforman los valores (cadena de caracteres) ingresados en el tipo de FO a un entero
-nbr     = eval(a(3,1)); %Se transforman los valores (cadena de caracteres) ingresados en el numero de restricciones a un entero
+
+C = inputdlg(prompt,title,lineno,def,options);
+[m,n]   = size(C);
+cout    = str2num(C{1});          %Se transforman los valores (cadena de caracteres) ingresados en la FO a un vector de enteros
+type    = str2double(C{2});       %Se transforman los valores (cadena de caracteres) ingresados en el tipo de FO a un entero
+num_restr     = str2double(C{3});       %Se transforman los valores (cadena de caracteres) ingresados en el numero de restricciones a un entero
+
 str1    = struct('vari',{},'Type',{});
-str2    = struct('var_base',{},'valeur',{});
-%=====================================================
+str2    = struct('var_base',{},'valor',{});
+% ====================================================================================
 
 
-% Ventana para definir restricciones
-for i=1:nbr %Se definen los tipos de restricciones en orden
-prompt          = {strcat('Ingrese el tipo de restricción para la condición ',num2str(i),' (<=,>=,=):')};
-title           = 'Ingreso de Datos';
-def             = {''};
-options.Resize  = 'on';
-p               = char(inputdlg(prompt,title,lineno,def,options));
-str1(1,i).Type  = p;
+% Ventana para definir restricciones ==========================================
+for i=1:num_restr %Se definen los tipos de restricciones en orden
+    prompt          = {strcat('Ingrese el tipo de restricción para la condición ',num2str(i),' (<=,>=,=):')};
+    title           = 'Ingreso de Datos';
+    def             = {''};
+    options.Resize  = 'on';
+    p               = inputdlg(prompt,title,lineno,def,options);
+    str1(1,i).Type  = sscanf(p{1}, '%c');
 end
-%=====================================================
+% ====================================================================================
 
 
-% Ventana para definir coeficinetes de las restricciones
+% Ventana para definir coeficinetes de las restricciones =============================
 prompt          = {'Ingrese la matriz de restricciones'};
 lineno          = 1;
 title           = 'Ingreso de Datos';
 def             = {'[]'};
 options.Resize  ='on';
-t               = char(inputdlg(prompt,title,lineno,def,options));
-sc              = eval(t); %Se transforman los valores (cadena de caracteres) ingresados en el campo, a un matriz de enteros
-%=====================================================
+t               = inputdlg(prompt,title,lineno,def,options);
+sc              = str2num(t{1}); %Se transforman los valores (cadena de caracteres) ingresados en el campo, a un matriz de enteros
+% ====================================================================================
 
 
-% Ventana para definir coeficinetes de 'b'
+% Ventana para definir coeficinetes de 'b' ==========================================
 prompt          = {'Ingrese el vector de valores independientes b'};
 lineno          = 1;
 title           = 'Ingreso de Datos';
 def             = {'[]'};
 options.Resize  = 'on';
-u               = char(inputdlg(prompt,title,lineno,def,options));
-second          = eval(u);
-%=====================================================
+u               = inputdlg(prompt,title,lineno,def,options);
+second          = str2num(u{1});
+% ====================================================================================
 
-M               = 1000*max(max(sc)); %METODO DE LA GRAN M
+M               = 1000*max(max(sc)); % Penalización para el algoritmo "GRAN M"
 sc1             = []; %Matriz de Variables de holgura
 sc2             = []; %Matriz de Variables artificiales
 v_a             = zeros(1,length(cout));
-v_e             = [];
+var_exceso      = [];
 v_b             = [];
 v_ari           = [];
 j               = 1;
 
 
 %Paso a forma estandar
-for i=1:nbr 
+for i=1:num_restr 
     n = str1(1,i).Type;
-    if n(1)~= '<' && isempty(sc2);
-        sc2=zeros(nbr,1);
+    if n(1)~= '<' && isempty(sc2)
+        sc2     = zeros(num_restr,1);
     end
     switch str1(1,i).Type
         case '<=' 
-            v_e=[v_e second(i)];
-            sc1(j,length(v_e))=1;
-            v_b=[v_b,second(i)];
+            var_exceso                 = [var_exceso second(i)];
+            sc1(j,length(var_exceso))  = 1;
+            v_b                 = [v_b second(i)];
             
         case '>='
-            v_e=[v_e 0];
-            sc1(j,length(v_e))=-1;
-            v_ari=[v_ari second(i)];
-            sc2(j,length(v_ari))=1;
-            v_b=[v_b,second(i)];
+            var_exceso                  = [var_exceso 0];
+            sc1(j,length(var_exceso))   = -1;
+            v_ari                       = [v_ari second(i)];
+            sc2(j,length(v_ari))= 1;
+            v_b                 = [v_b second(i)];
               
         case'=' 
-            v_ari=[v_ari second(i)];
-            sc2(j,length(v_ari))=1;
-            sc1(j,length(v_ari))=0;
-            v_b=[v_b,second(i)];
+            v_ari               = [v_ari second(i)];
+            sc2(j,length(v_ari))= 1;
+            sc1(j,length(v_ari))= 0;
+            v_b                 = [v_b,second(i)];
               
     end
-    j=j+1;
+    j = j+1;
 end
 %=======================================
 
 
-sc      =[sc,sc1,sc2]; %Nueva Matriz de restricciones con variables artificiales y de holgura añadidas
-vari    =[];
-vari_a  =[];
-vari_e  =[];
-vari_ar =[];
+sc      = [sc,sc1,sc2]; %Nueva Matriz de restricciones con variables artificiales y de holgura añadidas
+vari    = [];
+vari_a  = [];
+vari_e  = [];
+vari_ar = [];
 
 
 for i=1:size(sc,2)
-    str1(1,i).vari=['x',num2str(i)];
-    vari=[vari,str1(1,i).vari,' '];
+    str1(1,i).vari  = ['x',num2str(i)];
+    vari            = [vari,str1(1,i).vari,' '];
     if i<length(v_a)
-        vari_a=[vari_a,str1(1,i).vari,' '];
-    elseif i<=length(v_a)+length(v_e)
-        vari_e=[vari_e,str1(1,i).vari,' '];
+        vari_a      = [vari_a,str1(1,i).vari,' '];
+    elseif i<=length(v_a)+length(var_exceso)
+        vari_e      = [vari_e,str1(1,i).vari,' '];
     else
-        vari_ar=[vari_ar,str1(1,i).vari,' '];
+        vari_ar     = [vari_ar,str1(1,i).vari,' '];
     end
 end
 
 
-%Primera iteración
-x=[v_a,v_e,v_ari];
-if length(v_ari~=0)
+% Primera iteración
+x=[v_a,var_exceso,v_ari];
+if isempty(v_ari)
     v_ar    = ones(1,length(v_ari));
     if type==1
         v_ar=-M*length(v_ari).*v_ar;
     else
        v_ar=M*length(v_ari).*v_ar;
     end
-else  v_ar=[];
+else
+    v_ar =[];
 end
 
-Cj      = [cout,0.*v_e,v_ar];
+Cj      = [cout,0.*var_exceso,v_ar];
 Vb      = [];
 Q       = v_b;
 Ci      = [];
@@ -147,7 +151,7 @@ end
 
 Cj_Zj   = Cj-Zj;
 l       = [];
-for i=1:nbr
+for i=1:num_restr
     if length(str2(1,i).var_base)==2
         l=[l;str2(1,i).var_base,' '];
     else
@@ -167,7 +171,7 @@ disp(' ');
 disp('===============================   Tableau 0  ===============================');
 disp(['Inicialización de variables : ',vari]);
 disp(['                   -Variables No Básicas     : ',num2str(v_a)]);
-disp(['                   -Variables Básicas        : ',num2str(v_e)]);
+disp(['                   -Variables Básicas        : ',num2str(var_exceso)]);
 disp(['                   -Variables Artificiales   : ',num2str(v_ar)]);
 disp('============================================================================');
 disp(' ');
@@ -192,7 +196,8 @@ while arret==1
     else
       g=min(Cj_Zj);g=g(1);
         num1=find(Cj_Zj==g);num1=num1(1);
-        V_ent=str1(1,num1).vari;                ['x',num2str(num1)];
+        V_ent=str1(1,num1).vari;                
+        ['x',num2str(num1)];
     end
     b=sc(:,num1);
     k=0;d=10000;
@@ -231,7 +236,7 @@ while arret==1
     end
     Cj_Zj=Cj-Zj;
     l=[];V=[];
-    for i=1:nbr
+    for i=1:num_restr
         if length(str2(1,i).var_base)==2
             l=[l;str2(1,i).var_base,' '];
             V=[V,l(i,:),' '];
@@ -266,9 +271,10 @@ if type==1
     end
 else
 a   = min(Cj_Zj);a=a(1); 
-if a>=0 break;
+if a>=0 
+    break;
 end
 end
 end
 p   = num2str(Z);
-k   = msgbox( p,'RESULTADO F.O. OPTIMO :')
+k   = msgbox( p,'RESULTADO F.O. OPTIMO :');
